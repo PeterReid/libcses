@@ -29,5 +29,5 @@ int libcses_conn_interact(
   char *plaintext_out, int plaintext_out_capacity, int *plaintext_out_len
 ){
   
-
+  return 0;
 }

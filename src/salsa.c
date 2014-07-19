@@ -242,7 +242,7 @@ static const unsigned char sigma[16] = {
 
 
 // This is modified to XOR in-place
-int libcses_salsa20_xor_ic(
+void libcses_salsa20_xor_ic(
         unsigned char *m,unsigned long long mlen,
   const unsigned char *n, uint64_t ic,
   const unsigned char *k
@@ -253,7 +253,7 @@ int libcses_salsa20_xor_ic(
   unsigned long long i;
   unsigned int u;
 
-  if (!mlen) return 0;
+  if (!mlen) return;
 
   for (i = 0;i < 32;++i) kcopy[i] = k[i];
   for (i = 0;i < 8;++i) in[i] = n[i];
@@ -283,11 +283,9 @@ int libcses_salsa20_xor_ic(
   }
   libcses_memzero(block, sizeof block);
   libcses_memzero(kcopy, sizeof kcopy);
-
-  return 0;
 }
 
-int libcses_xsalsa20_subkey(
+void libcses_xsalsa20_subkey(
         unsigned char *subkey,
   const unsigned char *n,
   const unsigned char *k

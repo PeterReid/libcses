@@ -3,6 +3,9 @@
 #include <nacl/crypto_verify_16.h>
 #include <nacl/crypto_onetimeauth_poly1305.h>
 #include <stdlib.h>
+#include <stdint.h>
+
+#include "salsa.h"
 
 #define AUTHENTICATOR_BYTES crypto_onetimeauth_poly1305_BYTES
 
