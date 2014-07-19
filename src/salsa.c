@@ -293,30 +293,3 @@ void libcses_xsalsa20_subkey(
   crypto_core_hsalsa20(subkey, n, k, sigma);
 }
 
-void libcses_xsalsa20_prefixed(
-        unsigned char *m_prefix,
-        unsigned char *m,unsigned long long mlen,
-  const unsigned char *n,
-  const unsigned char *k
-)
-{
-  unsigned char subkey[32];
-  int i;
-  libcses_xsalsa20_subkey(subkey,n,k);
-
-  unsigned char block0[64];
-  memset(block0, 0, 64);
-  libcses_salsa20_xor_ic(block0, 64, n + 16, 0, subkey);
-  memcpy(m_prefix, block0, 32);
-
-  i = 0;
-  while( mlen>0 && i<32 ){
-    m[0] ^= block0[32 + i];
-    mlen--;
-    m++;
-    i++;
-  }
-  
-  libcses_salsa20_xor_ic(m,mlen,n + 16, 1, subkey);
-}
-
