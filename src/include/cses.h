@@ -1,3 +1,6 @@
+#ifndef CSES_H
+#define CSES_H
+
 struct libcses_client;
 struct libcses_conn;
 struct libcses_server;
@@ -18,24 +21,53 @@ struct libcses_server;
 */
 #define LIBCSES_HAS_IDENTITY 100 
 
-/* Get the size, in bytes, that a libcses_server occupies. 
-** A memory block of this size should be passed to libcses_server_init().
-*/
-int libcses_server_size();
+#define LIBCSES_SERVER_SECRET_BYTES 32
 
-int libcses_server_init(
-  struct libcses_server *, 
-  const char *secret, 
-  int secret_len
+struct libcses_server{
+  unsigned char public_key[32];
+  unsigned char secret_key[LIBCSES_SERVER_SECRET_BYTES];
+};
+
+void libcses_server_init(
+  struct libcses_server *,
+  const unsigned char *secret
 );
 
+#define LIBCSES_SECRET_BOX_KEY_BYTES 32
+#define LIBCSES_SECRET_BOX_NONCE_BYTES 24
+#define LIBCSES_SECRET_BOX_AUTHENTICATOR_BYTES 16
+
+struct libcses_secret_box{
+  unsigned char key[LIBCSES_SECRET_BOX_KEY_BYTES];
+  unsigned char nonce[LIBCSES_SECRET_BOX_NONCE_BYTES];
+};
+
+#define MAX_SEGMENT_LENGTH 1024
+#define MAC_LENGTH LIBCSES_SECRET_BOX_AUTHENTICATOR_BYTES
+#define SEGMENT_OVERHEAD (2 + MAC_LENGTH + MAC_LENGTH)
+#define BUFFER_CAPACITY (MAX_SEGMENT_LENGTH + MAC_LENGTH)
+
+struct libcses_conn{
+  int state;
+  struct libcses_secret_box encryptor;
+  struct libcses_secret_box decryptor;
+  unsigned char buffer[BUFFER_CAPACITY];
+  int buffered_count;
+  int expected_count;
+};
 /* Get the size, in bytes, that a conn occupies.
 ** A memory block of this size should be passed to libcses_conn_init().
 */
-int libcses_conn_size();
 
-int libces_conn_server_init(struct libcses_conn *, struct libcses_server *);
-int libces_conn_client_init(struct libcses_conn *);
+int libcses_conn_server_init(
+  struct libcses_conn *,
+  struct libcses_server *,
+  unsigned char *random32
+);
+int libcses_conn_client_init(
+  struct libcses_conn *,
+  unsigned char *random32
+);
 
 
 /* Interact with the server side of a connection. Plaintext and ciphertext
@@ -67,10 +99,10 @@ int libces_conn_client_init(struct libcses_conn *);
 **   returned.
 */
 int libcses_conn_interact(struct libcses_conn *,
-  const char *plaintext_in, int plaintext_in_len, int *plaintext_in_read,
-  const char *ciphertext_in, int ciphertext_in_len, int *ciphertext_in_read,
-  char *ciphertext_out, int ciphertext_out_capacity, int *ciphertext_out_len,
-  char *plaintext_out, int plaintext_out_capacity, int *plaintext_out_len);
+  const unsigned char *plaintext_in, int plaintext_in_len, int *plaintext_in_read,
+  const unsigned char *ciphertext_in, int ciphertext_in_len, int *ciphertext_in_read,
+  unsigned char *ciphertext_out, int ciphertext_out_capacity, int *ciphertext_out_len,
+  unsigned char *plaintext_out, int plaintext_out_capacity, int *plaintext_out_len);
 
 
 int libcses_conn_get_server_identity(
@@ -84,3 +116,6 @@ int libcses_conn_accept_server_identity(struct libcses_client *);
 ** the caller.
 */
 int libcses_conn_close(struct libcses_conn *);
+
+#endif
+

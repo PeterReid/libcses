@@ -1,9 +1,10 @@
 #include "secret_box.h"
 
-#include <nacl/crypto_verify_16.h>
-#include <nacl/crypto_onetimeauth_poly1305.h>
+#include <sodium/crypto_verify_16.h>
+#include <sodium/crypto_onetimeauth_poly1305.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "salsa.h"
 

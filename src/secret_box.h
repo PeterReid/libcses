@@ -1,15 +1,7 @@
-#include <string.h>
-#include <nacl/crypto_secretbox_xsalsa20poly1305.h>
-#include <nacl/crypto_onetimeauth_poly1305.h>
+#include <sodium/crypto_secretbox_xsalsa20poly1305.h>
+#include <sodium/crypto_onetimeauth_poly1305.h>
 
-#define LIBCSES_SECRET_BOX_KEY_BYTES crypto_secretbox_xsalsa20poly1305_KEYBYTES
-#define LIBCSES_SECRET_BOX_NONCE_BYTES crypto_secretbox_xsalsa20poly1305_NONCEBYTES
-#define LIBCSES_SECRET_BOX_AUTHENTICATOR_BYTES crypto_onetimeauth_poly1305_BYTES
-
-struct libcses_secret_box{
-  unsigned char key[crypto_secretbox_xsalsa20poly1305_KEYBYTES];
-  unsigned char nonce[crypto_secretbox_xsalsa20poly1305_NONCEBYTES];
-};
+#include "cses.h"
 
 void libcses_secret_box_init(struct libcses_secret_box *, const unsigned char *key);
 
