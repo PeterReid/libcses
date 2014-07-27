@@ -4,7 +4,7 @@
 #include <sodium/crypto_stream_chacha20.h>
 
 #include "cses.h"
-#include "secret_box.h"
+#include "crypter.h"
 #include "memzero.h"
 #include "cses_internal.h"
 
@@ -89,8 +89,8 @@ static void libcses_conn_init_crypters(
   encryption_key = key_bytes + (encryptor_first ? 0 : 32);
   decryption_key = key_bytes + (encryptor_first ? 32 : 0);
 
-  libcses_secret_box_init(&conn->encryptor, encryption_key);
-  libcses_secret_box_init(&conn->decryptor, decryption_key);
+  libcses_crypter_init(&conn->encryptor, encryption_key);
+  libcses_crypter_init(&conn->decryptor, decryption_key);
 
   libcses_memzero(key_bytes, sizeof key_bytes);
   libcses_memzero(private_key, 32);
@@ -192,7 +192,7 @@ int detect_forgery(struct libcses_conn *conn){
   unsigned char *ciphertext = conn->buffer + MAC_LENGTH;
   int result;
 
-  result = libcses_secret_box_decrypt(&conn->decryptor, mac, ciphertext, conn->buffered_count - MAC_LENGTH);
+  result = libcses_crypter_decrypt(&conn->decryptor, mac, ciphertext, conn->buffered_count - MAC_LENGTH);
   if( result ){
     conn->state = LIBCSES_CONN_CORRUPT;
     libcses_memzero(conn->buffer, conn->buffered_count);
@@ -227,7 +227,7 @@ void authencrypted_write(
   unsigned char *mac = ciphertext;
   unsigned char *body = mac + MAC_LENGTH;
   memcpy(body, plaintext, plaintext_len);
-  libcses_secret_box_encrypt(&conn->encryptor, mac, body, plaintext_len);
+  libcses_crypter_encrypt(&conn->encryptor, mac, body, plaintext_len);
 }
 
 int libcses_conn_interact(

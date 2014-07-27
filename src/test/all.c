@@ -4,7 +4,7 @@
 
 #include "cses.h"
 
-#include "../secret_box.h"
+#include "../crypter.h"
 #include "../cses_internal.h"
 
 void test_equality(const char *message, const unsigned char *x, const unsigned char *y, unsigned int len){
@@ -19,8 +19,8 @@ void test_equality_int(const char *message, int actual, int expected){
   }
 }
 
-void secret_box_nonce_incrementing(){
-  struct libcses_secret_box b;
+void crypter_nonce_incrementing(){
+  struct libcses_crypter b;
   unsigned char key[LIBCSES_SECRET_BOX_KEY_BYTES] = {
     0x6c, 0x9c, 0xae, 0x48, 0x5b, 0x19, 0x0e, 0x97, 0xa8, 0xec, 0x87, 0x3f, 0xf1, 0xec, 0xba, 0x71, 
     0xe3, 0xba, 0xd8, 0xbb, 0xc4, 0xf5, 0xda, 0x83, 0xe6, 0x69, 0xdf, 0xdd, 0x74, 0xa3, 0xfd, 0x0e, 
@@ -31,13 +31,13 @@ void secret_box_nonce_incrementing(){
 
   memset(expected_nonce, 0, sizeof expected_nonce);
   memset(text, 0, sizeof text);
-  libcses_secret_box_init(&b, key);
+  libcses_crypter_init(&b, key);
  
   /* Start with a 0 nonce */
   test_equality("initial nonce", expected_nonce, b.nonce, sizeof expected_nonce);
 
   /* Check that the first increment works */
-  libcses_secret_box_encrypt(&b, authenticator, text, sizeof text);
+  libcses_crypter_encrypt(&b, authenticator, text, sizeof text);
   expected_nonce[0] = 1;
   test_equality("nonce after one encryption", expected_nonce, b.nonce, sizeof expected_nonce);
 
@@ -49,7 +49,7 @@ void secret_box_nonce_incrementing(){
   b.nonce[18] = 101;
   expected_nonce[18] = 101;
 
-  libcses_secret_box_encrypt(&b, authenticator, text, sizeof text);
+  libcses_crypter_encrypt(&b, authenticator, text, sizeof text);
   test_equality("nonce after carry", expected_nonce, b.nonce, sizeof expected_nonce);
 }
 
@@ -159,7 +159,7 @@ void simple_exchange(){
 }
 
 int main(){
-  secret_box_nonce_incrementing();
+  crypter_nonce_incrementing();
   simple_exchange();
   printf("Complete\n");
   return 0;

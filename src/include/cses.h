@@ -37,7 +37,7 @@ void libcses_server_init(
 #define LIBCSES_SECRET_BOX_NONCE_BYTES 24
 #define LIBCSES_SECRET_BOX_AUTHENTICATOR_BYTES 16
 
-struct libcses_secret_box{
+struct libcses_crypter{
   unsigned char key[LIBCSES_SECRET_BOX_KEY_BYTES];
   unsigned char nonce[LIBCSES_SECRET_BOX_NONCE_BYTES];
 };
@@ -49,8 +49,8 @@ struct libcses_secret_box{
 
 struct libcses_conn{
   int state;
-  struct libcses_secret_box encryptor;
-  struct libcses_secret_box decryptor;
+  struct libcses_crypter encryptor;
+  struct libcses_crypter decryptor;
   unsigned char buffer[BUFFER_CAPACITY];
   int buffered_count;
   int expected_count;

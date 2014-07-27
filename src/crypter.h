@@ -3,16 +3,16 @@
 
 #include "cses.h"
 
-void libcses_secret_box_init(struct libcses_secret_box *, const unsigned char *key);
+void libcses_crypter_init(struct libcses_crypter *, const unsigned char *key);
 
-void libcses_secret_box_encrypt(
-  struct libcses_secret_box *box,
+void libcses_crypter_encrypt(
+  struct libcses_crypter *box,
   unsigned char *authenticator,
   unsigned char *text, 
   unsigned int text_len
 );
-int libcses_secret_box_decrypt(
-  struct libcses_secret_box *box,
+int libcses_crypter_decrypt(
+  struct libcses_crypter *box,
   const unsigned char *authenticator,
   unsigned char *text, unsigned int text_len
 );
