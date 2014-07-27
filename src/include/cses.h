@@ -8,7 +8,7 @@ struct libcses_server;
 #define LIBCSES_OK 0
 
 /* Invalid arguments -- programming error */
-#define LIBCSES_INVALID 1 
+#define LIBCSES_MISUSE 1 
 
 /* Ciphertext shows corruption or tampering */
 #define LIBCSES_CORRUPT 2 
@@ -106,9 +106,10 @@ int libcses_conn_interact(struct libcses_conn *,
 
 
 int libcses_conn_get_server_identity(
-  struct libcses_client *,
-  char *identity);
-int libcses_conn_accept_server_identity(struct libcses_client *);
+  struct libcses_conn *,
+  unsigned char *identity
+);
+int libcses_conn_accept_server_identity(struct libcses_conn *);
 
 
 /* Close a conn. Subsequent calls to libcses_conn_interact will fail with

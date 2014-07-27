@@ -16,7 +16,9 @@ static unsigned char *libcses_conn_handshake(struct libcses_conn *conn){
   /* Assuming SH_BYTES > CH_BYTES */
   return conn->buffer + sizeof(conn->buffer) - KEY_EXCHANGE_SECRET_BYTES - SH_BYTES;
 }
-
+static unsigned char *libcses_conn_prospective_identity(struct libcses_conn *conn){
+  return conn->buffer + sizeof(conn->buffer) - SH_IDENTITY_BYTES;
+}
 int libcses_conn_server_init(
   struct libcses_conn *conn,
   struct libcses_server *server,
@@ -206,6 +208,7 @@ int pipe_ready(struct libcses_conn *conn){
     case LIBCSES_CONN_SENDING_CLIENT_HANDSHAKE:
     case LIBCSES_CONN_AWAITING_CLIENT_HANDSHAKE:
     case LIBCSES_CONN_AWAITING_SERVER_HANDSHAKE:
+    case LIBCSES_CONN_VALIDATING_IDENTITY:
     case LIBCSES_CONN_CORRUPT:
     default:
       return 0;
@@ -283,14 +286,17 @@ int libcses_conn_interact(
           }else{
             unsigned char *client_secret = libcses_conn_private(conn);
             libcses_conn_init_crypters(conn, server_public, client_secret, 1);
-            // TODO: Do not bypass the server identity verification state
-            conn->state = LIBCSES_CONN_READING_LENGTH;
+            memcpy(libcses_conn_prospective_identity(conn), server_identity, SH_IDENTITY_BYTES);
+            conn->state = LIBCSES_CONN_VALIDATING_IDENTITY;
             conn->buffered_count = 0;
           }
         }else{
           done = 1;
         }
         break;
+
+      case LIBCSES_CONN_VALIDATING_IDENTITY:
+        return LIBCSES_HAS_IDENTITY;
 
       case LIBCSES_CONN_READING_LENGTH:
         if( accept_ciphertext(conn, 2 + MAC_LENGTH, ciphertext_in, ciphertext_in_len, ciphertext_in_read) ){
@@ -366,4 +372,26 @@ int libcses_conn_interact(
   }
 
   return 0;
+}
+
+int libcses_conn_get_server_identity(
+  struct libcses_conn *conn,
+  unsigned char *identity
+){
+  if( conn->state!=LIBCSES_CONN_VALIDATING_IDENTITY ){
+    memset(identity, 0, SH_IDENTITY_BYTES);
+    return LIBCSES_MISUSE;
+  }
+
+  memcpy(identity, libcses_conn_prospective_identity(conn), SH_IDENTITY_BYTES);
+  return LIBCSES_OK;
+}
+
+int libcses_conn_accept_server_identity(struct libcses_conn *conn){
+  if( conn->state!=LIBCSES_CONN_VALIDATING_IDENTITY ){
+    return LIBCSES_MISUSE;
+  }
+
+  conn->state = LIBCSES_CONN_READING_LENGTH;
+  return LIBCSES_OK;
 }

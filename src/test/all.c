@@ -73,6 +73,7 @@ void simple_exchange(){
   unsigned char plaintext_from_client[800];
   unsigned char server_session_randomness[32];
   unsigned char client_session_randomness[32];
+  unsigned char server_identity_on_client[32];
   int res;
   int c_plaintext_written = 0;
   int c_plaintext_read = 0;
@@ -115,18 +116,34 @@ void simple_exchange(){
   test_equality_int("server handshake+300 -- ciphertext read", s_ciphertext_read, 40);
   test_equality_int("server handshake+300 -- plaintext written", s_plaintext_written, 0);
 
-  // Receive everything they sent, but have only a small buffer for plaintext out
+  // Receive the handshake, ignoring the rest until the server identity is validated
   c_ciphertext_written = 0;
   res = libcses_conn_interact(&cconn,
     plaintext_for_server, 400, &c_plaintext_read,
     ciphertext_s_to_c, 300+SEGMENT_OVERHEAD+SH_BYTES, &c_ciphertext_read,
     ciphertext_c_to_s, sizeof ciphertext_c_to_s, &c_ciphertext_written,
     plaintext_from_server, 134, &c_plaintext_written);
-  test_equality_int("client recv1 -- result", res, LIBCSES_OK);
-  test_equality_int("client recv1 -- plaintext read", c_plaintext_read, 400);
-  test_equality_int("client recv1 -- plaintext written", c_plaintext_written, 134);
-  test_equality_int("client recv1 -- ciphertext read", c_ciphertext_read, 300+SEGMENT_OVERHEAD+SH_BYTES);
-  test_equality_int("client recv1 -- ciphertext written", c_ciphertext_written, 400+SEGMENT_OVERHEAD);
+  test_equality_int("client recv1.1 -- result", res, LIBCSES_HAS_IDENTITY);
+  test_equality_int("client recv1.1 -- plaintext read", c_plaintext_read, 0);
+  test_equality_int("client recv1.1 -- plaintext written", c_plaintext_written, 0);
+  test_equality_int("client recv1.1 -- ciphertext read", c_ciphertext_read, SH_BYTES);
+  test_equality_int("client recv1.1 -- ciphertext written", c_ciphertext_written, 0);
+
+  libcses_conn_get_server_identity(&cconn, server_identity_on_client);
+  test_equality("received server identity", server_identity_on_client, server.public_key, 32);
+  libcses_conn_accept_server_identity(&cconn);
+
+  // Receive everything they sent, but have only a small buffer for plaintext out
+  res = libcses_conn_interact(&cconn,
+    plaintext_for_server, 400, &c_plaintext_read,
+    ciphertext_s_to_c, 300+SEGMENT_OVERHEAD+SH_BYTES, &c_ciphertext_read,
+    ciphertext_c_to_s, sizeof ciphertext_c_to_s, &c_ciphertext_written,
+    plaintext_from_server, 134, &c_plaintext_written);
+  test_equality_int("client recv1.2 -- result", res, LIBCSES_OK);
+  test_equality_int("client recv1.2 -- plaintext read", c_plaintext_read, 400);
+  test_equality_int("client recv1.2 -- plaintext written", c_plaintext_written, 134);
+  test_equality_int("client recv1.2 -- ciphertext read", c_ciphertext_read, 300+SEGMENT_OVERHEAD+SH_BYTES);
+  test_equality_int("client recv1.2 -- ciphertext written", c_ciphertext_written, 400+SEGMENT_OVERHEAD);
  
   // Open up some more plaintext-in-buffer on the client
   res = libcses_conn_interact(&cconn,
