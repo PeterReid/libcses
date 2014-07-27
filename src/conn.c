@@ -1,9 +1,10 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <sodium/crypto_stream_chacha20.h>
+
 #include "cses.h"
 #include "secret_box.h"
-#include "salsa.h"
 #include "memzero.h"
 #include "cses_internal.h"
 
@@ -79,12 +80,12 @@ static void libcses_conn_init_crypters(
   unsigned char key_bytes[64];
   unsigned char *encryption_key;
   unsigned char *decryption_key;
-  unsigned char nonce[crypto_stream_xsalsa20_NONCEBYTES];
+  unsigned char nonce[crypto_stream_chacha20_NONCEBYTES];
 
   crypto_scalarmult_curve25519(shared, private_key, public_key);
   memset(nonce, 0, 64);
   memset(key_bytes, 0, 64);
-  libcses_salsa20_xor_ic(key_bytes, sizeof key_bytes, nonce, 0, shared);
+  crypto_stream_chacha20(key_bytes, sizeof key_bytes, nonce, shared);
   encryption_key = key_bytes + (encryptor_first ? 0 : 32);
   decryption_key = key_bytes + (encryptor_first ? 32 : 0);
 

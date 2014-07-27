@@ -19,75 +19,6 @@ void test_equality_int(const char *message, int actual, int expected){
   }
 }
 
-#define PAD crypto_secretbox_xsalsa20poly1305_ZEROBYTES 
-#include <sodium/crypto_stream.h>
-#include <sodium/crypto_secretbox_xsalsa20poly1305.h>
-
-void secret_box_matches_nacl_round(int round_num){
-  struct libcses_secret_box encryptor;
-  struct libcses_secret_box decryptor;
-  unsigned char key[LIBCSES_SECRET_BOX_KEY_BYTES];
-  unsigned char nonce[LIBCSES_SECRET_BOX_NONCE_BYTES];
-  int text_len;
-  int result;
-  unsigned char *text;
-  unsigned char *padded_ciphertext;
-  unsigned char *padded_plaintext;
-  unsigned char gen_key[crypto_stream_KEYBYTES];
-  unsigned char gen_nonce[crypto_stream_NONCEBYTES];
-  unsigned char authenticator[LIBCSES_SECRET_BOX_AUTHENTICATOR_BYTES];
-  memset(gen_key, 0, sizeof gen_key);
-  memset(gen_nonce, 0, sizeof gen_nonce);
-
-  /* To make this round unique, populate the RNG key with the round number */
-  gen_key[0] = round_num & 0xff;
-  gen_key[1] = (round_num>>8) & 0xff;
-
-  crypto_stream(key, sizeof key, gen_key, gen_nonce);
-  gen_nonce[0] = 1;
-  crypto_stream(nonce, sizeof nonce, gen_key, gen_nonce);
-  gen_nonce[0] = 2;
-
-  libcses_secret_box_init(&encryptor, key);
-  libcses_secret_box_init(&decryptor, key);
-  memcpy(encryptor.nonce, nonce, sizeof nonce);
-  memcpy(decryptor.nonce, nonce, sizeof nonce);
-
-  for( text_len=1; text_len<4000; text_len = (text_len * 5) / 4 + 1 ){
-    /* Get a unique nonce for this encryption pair */
-    gen_nonce[1] = text_len & 0xff;
-    gen_nonce[2] = (text_len >> 8) & 0xff;
-
-    text = malloc(text_len);
-    padded_ciphertext = malloc(text_len + PAD);
-    padded_plaintext = malloc(text_len + PAD);
-
-    /* Generate a random-looking plaintext */
-    crypto_stream(text, text_len, gen_key, gen_nonce);
-
-    /* Prepare the equivalent nacl call -- a 32-byte string of 0s prefixes the plaintext */
-    memset(padded_plaintext, 0, PAD);
-    memcpy(padded_plaintext + PAD, text, text_len);
-
-    crypto_secretbox_xsalsa20poly1305(padded_ciphertext, padded_plaintext, text_len + PAD, encryptor.nonce, encryptor.key);
-
-    libcses_secret_box_encrypt(&encryptor, authenticator, text, text_len);
-    test_equality("authenticators", authenticator, padded_ciphertext + 16, 16);
-    test_equality("ciphertexts", text, padded_ciphertext + PAD, text_len);
-
-    result = libcses_secret_box_decrypt(&decryptor, authenticator, text, text_len);
-    test_equality("decrypted plaintext", text, padded_plaintext + PAD, text_len);
-    test_equality_int("decryption success", 0, result);
-  }
-}
-
-void secret_box_matches_nacl(){
-  int i;
-  for( i=0; i<100; i++ ){
-    secret_box_matches_nacl_round(i);
-  }
-}
-
 void secret_box_nonce_incrementing(){
   struct libcses_secret_box b;
   unsigned char key[LIBCSES_SECRET_BOX_KEY_BYTES] = {
@@ -228,7 +159,6 @@ void simple_exchange(){
 }
 
 int main(){
-  secret_box_matches_nacl();
   secret_box_nonce_incrementing();
   simple_exchange();
   printf("Complete\n");
