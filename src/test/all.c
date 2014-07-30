@@ -229,6 +229,7 @@ void generic_stream_test(int seed, int verbose){
   int c_plaintext_write = 0;
   int s_plaintext_read = 0;
   int s_plaintext_write = 0;
+  int res;
 
   rng_init(&r, seed);
 
@@ -252,21 +253,26 @@ void generic_stream_test(int seed, int verbose){
 
   while( c_plaintext_write<for_client_length || s_plaintext_write<for_server_length ){
     int action = rng_int(&r, 5);
-    if( action==0 ){
+    switch( action ){
+    case 0:
       /* Allocate more ciphertext-write space for the server */
       circular_increase_lt(&r, &s_ciphertext_write_limit, c_ciphertext_read, sizeof s_to_c);
-    }else if( action==1 ){
+      break;
+    case 1:
       /* Allocate more ciphertext-write space for the client */
       circular_increase_lt(&r, &c_ciphertext_write_limit, s_ciphertext_read, sizeof c_to_s);
-    }else if( action==2 ){
+      break;
+    case 2:
       /* Allow more ciphertext reading for the server */
       circular_increase_lte(&r, &s_ciphertext_read_limit, c_ciphertext_write, sizeof c_to_s);
-    }else if( action==3 ){
+      break;
+    case 3:
       /* Allow more ciphertext reading for the client */
       circular_increase_lte(&r, &c_ciphertext_read_limit, s_ciphertext_write, sizeof s_to_c);
-    }else if( action==4 ){
+      break;
+    case 4:
       /* Client work */
-      int res = libcses_conn_interact(&cconn,
+      res = libcses_conn_interact(&cconn,
         for_server, for_server_length, &c_plaintext_read,
         s_to_c, circular_end(c_ciphertext_read, c_ciphertext_read_limit, sizeof s_to_c), &c_ciphertext_read,
         c_to_s, circular_end(c_ciphertext_write, c_ciphertext_write_limit, sizeof c_to_s), &c_ciphertext_write,
@@ -281,9 +287,10 @@ void generic_stream_test(int seed, int verbose){
           exit(1);
         }
       }
-    }else if( action==5 ){
+      break;
+    case 5:
       /* Server work */
-      int res = libcses_conn_interact(&sconn,
+      res = libcses_conn_interact(&sconn,
         for_client, for_client_length, &s_plaintext_read,
         c_to_s, circular_end(s_ciphertext_read, s_ciphertext_read_limit, sizeof c_to_s), &s_ciphertext_read,
         s_to_c, circular_end(s_ciphertext_write, s_ciphertext_write_limit, sizeof s_to_c), &s_ciphertext_write,
@@ -294,6 +301,7 @@ void generic_stream_test(int seed, int verbose){
       if( res!=LIBCSES_OK ){
         exit(1);
       }
+      break;
     }
   }
 
