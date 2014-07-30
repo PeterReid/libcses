@@ -21,16 +21,17 @@ struct libcses_server;
 */
 #define LIBCSES_HAS_IDENTITY 100 
 
-#define LIBCSES_SERVER_SECRET_BYTES 32
-
 struct libcses_server{
   unsigned char public_key[32];
-  unsigned char secret_key[LIBCSES_SERVER_SECRET_BYTES];
+  unsigned char secret_key[64];
 };
 
+/* Initialize a server with the given 32-byte secret. The server's public identity
+** is derived from the sercret.
+*/
 void libcses_server_init(
   struct libcses_server *,
-  const unsigned char *secret
+  const unsigned char *secret32
 );
 
 #define LIBCSES_SECRET_BOX_KEY_BYTES 32

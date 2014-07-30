@@ -42,6 +42,7 @@ int libcses_conn_server_init(
   memset(handshake + SH_STATUS_OFFSET, 0, SH_STATUS_BYTES);
   memcpy(handshake + SH_IDENTITY_OFFSET, server->public_key, SH_IDENTITY_BYTES);
   memcpy(handshake + SH_EXCHANGE_OFFSET, public_key, SH_EXCHANGE_BYTES);
+
   crypto_sign_ed25519_detached(
     handshake + SH_SIGNATURE_OFFSET, 0,
     handshake + SH_EXCHANGE_OFFSET, SH_EXCHANGE_BYTES,
