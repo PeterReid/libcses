@@ -152,7 +152,7 @@ static int send_handshake(
 
   memcpy(
     ciphertext_out + *ciphertext_written,
-    libcses_conn_handshake(conn),
+    libcses_conn_handshake(conn) + *ciphertext_written,
     will_send);
   conn->buffered_count += will_send;
   *ciphertext_written += will_send;
