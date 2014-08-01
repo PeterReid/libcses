@@ -8,15 +8,17 @@
 #include "../cses_internal.h"
 #include "rng.h"
 
+static char test_context[256] = "";
+
 void test_equality(const char *message, const unsigned char *x, const unsigned char *y, unsigned int len){
   if( memcmp(x, y, len) ){
-    printf("Test failure: %s\n", message);
+    printf("Test failure in %s: %s\n", test_context, message);
   }
 }
 
 void test_equality_int(const char *message, int actual, int expected){
   if( expected!=actual ){
-    printf("Test failure: %s (expected %d, got %d)\n", message, expected, actual);
+    printf("Test failure in %s: %s (expected %d, got %d)\n", test_context, message, expected, actual);
   }
 }
 
@@ -29,6 +31,8 @@ void crypter_nonce_incrementing(){
   unsigned char expected_nonce[LIBCSES_SECRET_BOX_NONCE_BYTES];
   unsigned char authenticator[LIBCSES_SECRET_BOX_AUTHENTICATOR_BYTES];
   unsigned char text[10];
+
+  strcpy(test_context, "nonce incrementing");
 
   memset(expected_nonce, 0, sizeof expected_nonce);
   memset(text, 0, sizeof text);
@@ -84,6 +88,8 @@ void simple_exchange(){
   int s_plaintext_read = 0;
   int s_ciphertext_written = 0;
   int s_ciphertext_read = 0;
+
+  strcpy(test_context, "simple exchange");
 
   populate(server_secret, sizeof server_secret, 3);
   populate(plaintext_for_server, sizeof plaintext_for_server, 5);
@@ -176,50 +182,20 @@ void simple_exchange(){
   test_equality("client->server", plaintext_from_client, plaintext_for_server, sizeof plaintext_for_server);
 }
 
-void circular_increase_lte(rng *r, int *val, int limit, int loop_at){
+void random_increase(rng *r, int *val, int limit){
   unsigned int increase_by = rng_int(r, 700);
-  if( *val<=limit ){
-    *val += increase_by;
-    if( *val>limit ) *val = limit;
-  }else{
-    *val += increase_by;
-    if( *val>=loop_at ){
-      *val %= loop_at;
-      if( *val>limit ) *val = limit;
-    }
-  }
-}
-void circular_increase_lt(rng *r, int *val, int limit, int loop_at){
-  unsigned int increase_by = rng_int(r, 700);
-  if( *val<limit ){
-    *val += increase_by;
-    if( *val>limit ) *val = limit;
-  }else{
-    *val += increase_by;
-    if( *val>=loop_at ){
-      *val %= loop_at;
-      if( *val>=limit ) *val = limit-1;
-      if( *val==-1 ) val += loop_at;
-    }
-  }
-}
-int circular_end(int from, int to, int loop_at){
-  if( from<=to ){
-    return to;
-  }else{
-    return loop_at;
-  }
+  *val += increase_by;
+  if( *val>limit ) *val = limit;
 }
 
 void generic_stream_test(int seed, int verbose){
   rng r;
   int for_server_length, for_client_length;
   unsigned char *for_server, *for_client, *from_server, *from_client; /* plaintexts */
+  unsigned char *c_to_s, *s_to_c;
   struct libcses_server server;
   struct libcses_conn sconn;
   struct libcses_conn cconn;
-  unsigned char c_to_s[20000]; /* client->server circular buffer */
-  unsigned char s_to_c[20000]; /* server->client circular buffer */
   unsigned char random[32];
   int s_ciphertext_write = 0, s_ciphertext_write_limit = 0;
   int c_ciphertext_write = 0, c_ciphertext_write_limit = 0;
@@ -229,7 +205,11 @@ void generic_stream_test(int seed, int verbose){
   int c_plaintext_write = 0;
   int s_plaintext_read = 0;
   int s_plaintext_write = 0;
+  int c_to_s_length;
+  int s_to_c_length;
   int res;
+
+  sprintf(test_context, "stream %d", seed);
 
   rng_init(&r, seed);
 
@@ -242,11 +222,22 @@ void generic_stream_test(int seed, int verbose){
 
   for_server_length = rng_int(&r, 100000);
   for_client_length = rng_int(&r, 100000);
+  /* Determine buffer lengths for the ciphertexts.
+  ** 
+  ** This does not cover the hard ceiling on the length of the ciphertext,
+  ** since we could theoretically send lots of 1-byte segments, but it 
+  ** is enough that it is vanishingly unlikely to run into this limit.
+  ** Hitting this limit almost certainly means something is very wrong.
+  */
+  c_to_s_length = for_server_length*10;
+  s_to_c_length = for_client_length*10;
 
   for_server = (unsigned char *)malloc(for_server_length);
   for_client = (unsigned char *)malloc(for_client_length);
   from_server = (unsigned char *)malloc(for_client_length);
   from_client = (unsigned char *)malloc(for_server_length);
+  c_to_s = (unsigned char *)malloc(c_to_s_length);
+  s_to_c = (unsigned char *)malloc(s_to_c_length);
 
   rng_buf(&r, for_server, for_server_length);
   rng_buf(&r, for_client, for_client_length);
@@ -256,29 +247,38 @@ void generic_stream_test(int seed, int verbose){
     switch( action ){
     case 0:
       /* Allocate more ciphertext-write space for the server */
-      circular_increase_lt(&r, &s_ciphertext_write_limit, c_ciphertext_read, sizeof s_to_c);
+      random_increase(&r, &s_ciphertext_write_limit, s_to_c_length);
+      if( verbose ) printf("s_ciphertext_write_limit = %d\n", s_ciphertext_write_limit);
       break;
     case 1:
       /* Allocate more ciphertext-write space for the client */
-      circular_increase_lt(&r, &c_ciphertext_write_limit, s_ciphertext_read, sizeof c_to_s);
+      random_increase(&r, &c_ciphertext_write_limit, c_to_s_length);
+      if( verbose ) printf("c_ciphertext_write_limit = %d\n", s_ciphertext_write_limit);
       break;
     case 2:
       /* Allow more ciphertext reading for the server */
-      circular_increase_lte(&r, &s_ciphertext_read_limit, c_ciphertext_write, sizeof c_to_s);
+      random_increase(&r, &s_ciphertext_read_limit, c_ciphertext_write);
+      if( verbose ) printf("s_ciphertext_read_limit = %d\n", s_ciphertext_read_limit);
       break;
     case 3:
       /* Allow more ciphertext reading for the client */
-      circular_increase_lte(&r, &c_ciphertext_read_limit, s_ciphertext_write, sizeof s_to_c);
+      random_increase(&r, &c_ciphertext_read_limit, s_ciphertext_write);
+      if( verbose ) printf("c_ciphertext_read_limit = %d\n", c_ciphertext_read_limit);
       break;
     case 4:
       /* Client work */
       res = libcses_conn_interact(&cconn,
         for_server, for_server_length, &c_plaintext_read,
-        s_to_c, circular_end(c_ciphertext_read, c_ciphertext_read_limit, sizeof s_to_c), &c_ciphertext_read,
-        c_to_s, circular_end(c_ciphertext_write, c_ciphertext_write_limit, sizeof c_to_s), &c_ciphertext_write,
+        s_to_c, c_ciphertext_read_limit, &c_ciphertext_read,
+        c_to_s, c_ciphertext_write_limit, &c_ciphertext_write,
         from_server, for_client_length, &c_plaintext_write);
-      c_ciphertext_read %= sizeof s_to_c;
-      c_ciphertext_write %= sizeof c_to_s;
+      if( verbose ){
+        printf("Client interacted (%d)\n", res);
+        printf("  Plaintext read: %d of %d\n", c_plaintext_read, for_server_length);
+        printf("  Ciphertext read: %d of %d\n", c_ciphertext_read, c_ciphertext_read_limit);
+        printf("  Plaintext written: %d of %d\n", c_plaintext_write, for_client_length);
+        printf("  Ciphertext written: %d of %d\n", c_ciphertext_write, c_ciphertext_write_limit);
+      }
       if( res==LIBCSES_HAS_IDENTITY ){
         libcses_conn_accept_server_identity(&cconn);
       }else{
@@ -292,11 +292,16 @@ void generic_stream_test(int seed, int verbose){
       /* Server work */
       res = libcses_conn_interact(&sconn,
         for_client, for_client_length, &s_plaintext_read,
-        c_to_s, circular_end(s_ciphertext_read, s_ciphertext_read_limit, sizeof c_to_s), &s_ciphertext_read,
-        s_to_c, circular_end(s_ciphertext_write, s_ciphertext_write_limit, sizeof s_to_c), &s_ciphertext_write,
+        c_to_s, s_ciphertext_read_limit, &s_ciphertext_read,
+        s_to_c, s_ciphertext_write_limit, &s_ciphertext_write,
         from_client, for_server_length, &s_plaintext_write);
-      s_ciphertext_read %= sizeof c_to_s;
-      s_ciphertext_write %= sizeof s_to_c;
+      if( verbose ){
+        printf("Server interacted (%d)\n", res);
+        printf("  Plaintext read: %d of %d\n", s_plaintext_read, for_client_length);
+        printf("  Ciphertext read: %d of %d\n", s_ciphertext_read, s_ciphertext_read_limit);
+        printf("  Plaintext written: %d of %d\n", s_plaintext_write, for_server_length);
+        printf("  Ciphertext written: %d of %d\n", s_ciphertext_write, s_ciphertext_write_limit);
+      }
       test_equality_int("server interact", res, LIBCSES_OK);
       if( res!=LIBCSES_OK ){
         exit(1);
@@ -309,12 +314,14 @@ void generic_stream_test(int seed, int verbose){
   free((void *)for_client);
   free((void *)from_server);
   free((void *)from_client);
+  free((void *)c_to_s);
+  free((void *)s_to_c);
 }
 
 void stream_tests(){
   int seed;
-  for( seed=0; seed<5; seed++ ){
-    generic_stream_test(seed, 1);
+  for( seed=0; seed<100; seed++ ){
+    generic_stream_test(seed, 0);
   }
 }
 
