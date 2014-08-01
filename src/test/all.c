@@ -123,7 +123,7 @@ void simple_exchange(){
   test_equality_int("server handshake+300 -- ciphertext read", s_ciphertext_read, 40);
   test_equality_int("server handshake+300 -- plaintext written", s_plaintext_written, 0);
 
-  // Receive the handshake, ignoring the rest until the server identity is validated
+  /* Receive the handshake, ignoring the rest until the server identity is validated */
   c_ciphertext_written = 0;
   res = libcses_conn_interact(&cconn,
     plaintext_for_server, 400, &c_plaintext_read,
@@ -140,7 +140,7 @@ void simple_exchange(){
   test_equality("received server identity", server_identity_on_client, server.public_key, 32);
   libcses_conn_accept_server_identity(&cconn);
 
-  // Receive everything they sent, but have only a small buffer for plaintext out
+  /* Receive everything they sent, but have only a small buffer for plaintext out */
   res = libcses_conn_interact(&cconn,
     plaintext_for_server, 400, &c_plaintext_read,
     ciphertext_s_to_c, 300+SEGMENT_OVERHEAD+SH_BYTES, &c_ciphertext_read,
@@ -152,7 +152,7 @@ void simple_exchange(){
   test_equality_int("client recv1.2 -- ciphertext read", c_ciphertext_read, 300+SEGMENT_OVERHEAD+SH_BYTES);
   test_equality_int("client recv1.2 -- ciphertext written", c_ciphertext_written, 400+SEGMENT_OVERHEAD);
  
-  // Open up some more plaintext-in-buffer on the client
+  /* Open up some more plaintext-in-buffer on the client */
   res = libcses_conn_interact(&cconn,
     0, 0, 0,
     0, 0, 0,
@@ -161,7 +161,7 @@ void simple_exchange(){
   test_equality_int("client recv2 -- result", res, LIBCSES_OK);
   test_equality_int("client recv2 -- plaintext_written", c_plaintext_written, 300);
 
-  // Receive the client message on the server
+  /* Receive the client message on the server */
   s_plaintext_read = 0;
   s_ciphertext_read = 0;
   s_ciphertext_written = 0;
@@ -177,7 +177,7 @@ void simple_exchange(){
   test_equality_int("server recv -- ciphertext read", s_ciphertext_read, 400+SEGMENT_OVERHEAD);
   test_equality_int("server recv -- ciphertext written", s_ciphertext_written, 0);
 
-  // Make sure we actually got the right content
+  /* Make sure we actually got the right content */
   test_equality("server->client", plaintext_from_server, plaintext_for_client, sizeof plaintext_for_client);
   test_equality("client->server", plaintext_from_client, plaintext_for_server, sizeof plaintext_for_server);
 }
