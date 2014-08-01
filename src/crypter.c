@@ -19,7 +19,7 @@ void libcses_crypter_init(
 
 static void libcses_crypter_next_nonce(struct libcses_crypter *box){
   unsigned int u = 1;
-  int i;
+  unsigned int i;
   for( i=0; i<sizeof(box->nonce); i++ ){
     u += box->nonce[i];
     box->nonce[i] = u;
