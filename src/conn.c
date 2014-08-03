@@ -1,8 +1,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <sodium/crypto_stream_salsa20.h>
-
 #include "cses.h"
 #include "crypter.h"
 #include "memzero.h"
@@ -80,11 +78,11 @@ static void libcses_conn_init_crypters(
   unsigned char *private_key,
   int encryptor_first
 ){
-  unsigned char shared[crypto_scalarmult_curve25519_BYTES];
+  unsigned char shared[cses_crypto_scalarmult_curve25519_BYTES];
   unsigned char key_bytes[64];
   unsigned char *encryption_key;
   unsigned char *decryption_key;
-  unsigned char nonce[crypto_stream_salsa20_NONCEBYTES];
+  unsigned char nonce[cses_crypto_stream_salsa20_NONCEBYTES];
 
   cses_crypto_scalarmult_curve25519(shared, private_key, public_key);
 

@@ -156,6 +156,7 @@ crypto_consts:
 	cat \
 	  $(LIBSODIUM)/src/libsodium/include/sodium/crypto_scalarmult_curve25519.h \
 	  $(LIBSODIUM)/src/libsodium/include/sodium/crypto_sign_ed25519.h \
+	  $(LIBSODIUM)/src/libsodium/include/sodium/crypto_stream_salsa20.h \
 	| grep "#define crypto_.* [0-9]" \
 	| sed 's/crypto_/cses_crypto_/g' \
 	> src/crypto_consts.h

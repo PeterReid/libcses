@@ -1,17 +1,13 @@
-#include "cses_internal.h"
-#include "crypter.h"
 
-
-#include <sodium/crypto_verify_16.h>
-#include <sodium/crypto_onetimeauth_poly1305.h>
-#include <sodium/crypto_secretbox.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 
+#include "cses_internal.h"
+#include "crypter.h"
 #include "crypto.h"
 
-#define AUTHENTICATOR_BYTES crypto_onetimeauth_poly1305_BYTES
+#define AUTHENTICATOR_BYTES cses_crypto_onetimeauth_poly1305_BYTES
 
 LIBCSES_PRIVATE void libcses_crypter_init(
   struct libcses_crypter *box,

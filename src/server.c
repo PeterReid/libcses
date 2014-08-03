@@ -1,6 +1,5 @@
 #include <string.h>
 #include <assert.h>
-#include <sodium/crypto_sign_ed25519.h>
 
 #include "cses.h"
 #include "crypto.h"

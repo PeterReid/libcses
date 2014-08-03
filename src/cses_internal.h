@@ -1,11 +1,9 @@
 
-#include <sodium/crypto_scalarmult_curve25519.h>
-#include <sodium/crypto_sign_ed25519.h>
-#include <sodium/crypto_stream_xsalsa20.h>
-
 #ifndef LIBCSES_PRIVATE
 #define LIBCSES_PRIVATE
 #endif
+
+#include "crypto_consts.h"
 
 /* Legal values of libcses_conn.state */
 #define LIBCSES_CONN_SENDING_CLIENT_HANDSHAKE 1
@@ -25,9 +23,9 @@
 /*** Server handshake ***/
 /* sizes */
 #define SH_STATUS_BYTES 1
-#define SH_IDENTITY_BYTES crypto_sign_ed25519_PUBLICKEYBYTES
-#define SH_EXCHANGE_BYTES crypto_scalarmult_curve25519_SCALARBYTES 
-#define SH_SIGNATURE_BYTES crypto_sign_ed25519_BYTES
+#define SH_IDENTITY_BYTES cses_crypto_sign_ed25519_PUBLICKEYBYTES
+#define SH_EXCHANGE_BYTES cses_crypto_scalarmult_curve25519_SCALARBYTES 
+#define SH_SIGNATURE_BYTES cses_crypto_sign_ed25519_BYTES
 /* offsets */
 #define SH_STATUS_OFFSET     0
 #define SH_IDENTITY_OFFSET (SH_STATUS_OFFSET    + SH_STATUS_BYTES)
@@ -39,7 +37,7 @@
 #define HANDSHAKE_MAGIC "cses_wip"
 /* sizes */
 #define CH_MAGIC_BYTES 8
-#define CH_EXCHANGE_BYTES crypto_scalarmult_curve25519_SCALARBYTES
+#define CH_EXCHANGE_BYTES cses_crypto_scalarmult_curve25519_SCALARBYTES
 /* offsets */
 #define CH_MAGIC_OFFSET     0
 #define CH_EXCHANGE_OFFSET (CH_MAGIC_OFFSET    + CH_MAGIC_BYTES)
