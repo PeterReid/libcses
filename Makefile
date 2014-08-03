@@ -162,7 +162,7 @@ crypto_consts:
 	  $(LIBSODIUM)/src/libsodium/include/sodium/crypto_stream_salsa20.h \
 	| grep "#define crypto_.* [0-9]" \
 	| sed 's/crypto_/libcses_/g' \
-	> src/crypto_consts.h
+	> build/crypto_consts.h
 
 all: test
 
@@ -173,7 +173,7 @@ amalgamation: libsodium_amalgamation
 	(echo "#include \"cses.h\"" \
         ; cat \
 	    build/crypto.c \
-	    src/crypto_consts.h \
+	    build/crypto_consts.h \
             src/cses_internal.h \
 	    src/conn.c \
 	    src/crypter.c \
@@ -182,14 +182,14 @@ amalgamation: libsodium_amalgamation
         ) \
 	> build/cses.c
 
-cses.o: amalgamation
+cses.o: amalgamation crypto_consts
 	gcc -DHAVE_TI_MODE -c -DLIBCSES_AMALGAMATION -o build/cses.o build/cses.c
 
 lib: cses.o
 	ar -rcs cses.a build/cses.o
 
-test: crypto
-	gcc $(CFLAGS) -g -o tester -I src/include $(SOURCES) $(TEST_SOURCES) crypto.o -lsodium
+test: crypto crypto_consts
+	gcc $(CFLAGS) -g -o tester -I src/include -I build $(SOURCES) $(TEST_SOURCES) crypto.o -lsodium
 
 
 
