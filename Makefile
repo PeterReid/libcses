@@ -10,6 +10,7 @@ libsodium_amalgamation:
 	( cat \
   src/crypto_prelude.h \
   $(LIBSODIUM)/src/libsodium/include/sodium/utils.h \
+  $(LIBSODIUM)/src/libsodium/sodium/utils.c \
   $(LIBSODIUM)/src/libsodium/crypto_verify/16/ref/verify_16.c \
   $(LIBSODIUM)/src/libsodium/crypto_verify/32/ref/verify_32.c \
   $(LIBSODIUM)/src/libsodium/crypto_scalarmult/curve25519/donna_c64/api.h \
@@ -94,6 +95,8 @@ libsodium_amalgamation:
   ; cat \
     $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_tobytes.c \
     $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/keypair.c \
+    | sed 's/int crypto_sign_keypair/static int unused_keypair/g' \
+    | sed 's/randombytes//g' \
   ; cat \
     $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/sc_reduce.c \
     | sed 's/load_3/sc_reduce_load_3/g' \
@@ -135,17 +138,57 @@ libsodium_amalgamation:
   ; cat \
     src/crypto_short.c \
   ) \
-  | sed 's/crypto_/cses_crypto_/g' | sed '/# *include "/c\' > build/crypto.c
+  | sed 's/crypto_/cses_crypto_/g' | sed '/# *include "/c\' \
+  | sed 's/^int/LIBCSES_PRIVATE int/g' \
+  | sed 's/^size_t/LIBCSES_PRIVATE size_t/g' \
+  | sed 's/^void/LIBCSES_PRIVATE void/g' \
+  | sed 's/^struct/LIBCSES_PRIVATE struct/g' \
+  | sed 's/^char \*/LIBCSES_PRIVATE char */g' \
+  | sed 's/^unsigned char \*/LIBCSES_PRIVATE unsigned char */g' \
+  | sed 's/^const char \*/LIBCSES_PRIVATE const char */g' \
+  | sed 's/extern void/static void/g' \
+  | sed 's/extern int/static int/g' \
+  | sed 's/extern struct/static struct/g' \
+  > build/crypto.c
 
-
+crypto_consts:
+	cat \
+	  $(LIBSODIUM)/src/libsodium/include/sodium/crypto_scalarmult_curve25519.h \
+	  $(LIBSODIUM)/src/libsodium/include/sodium/crypto_sign_ed25519.h \
+	| grep "#define crypto_.* [0-9]" \
+	| sed 's/crypto_/cses_crypto_/g' \
+	> src/crypto_consts.h
 
 all: test
 
 crypto: libsodium_amalgamation
 	gcc -DHAVE_TI_MODE -c build/crypto.c
 
+amalgamation: libsodium_amalgamation
+	(echo "#include \"cses.h\"" \
+        ; cat \
+	    build/crypto.c \
+            src/cses_internal.h \
+            src/crypter.h \
+	    src/memzero.h \
+	    src/conn.c \
+	    src/crypter.c \
+	    src/memzero.c \
+	    src/server.c \
+          | sed '/# *include "/c\' \
+        ) \
+	> build/cses.c
+
+cses.o: amalgamation
+	gcc -DHAVE_TI_MODE -c -DLIBCSES_AMALGAMATION -o build/cses.o build/cses.c
+
+lib: cses.o
+	ar -rcs cses.a build/cses.o
+
 test: crypto
 	gcc $(CFLAGS) -g -o tester -I src/include $(SOURCES) $(TEST_SOURCES) crypto.o -lsodium
+
+
 
 valgrind: test
 	valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./tester

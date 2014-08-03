@@ -161,7 +161,7 @@ static int send_handshake(
   return conn->buffered_count == handshake_size;
 }
 
-int copy_plaintext_out(
+static int copy_plaintext_out(
   struct libcses_conn *conn,
   unsigned char *plaintext_out,
   int plaintext_out_capacity,
@@ -184,15 +184,15 @@ int copy_plaintext_out(
   return conn->expected_count == conn->buffered_count;
 }
 
-unsigned int read_length(const unsigned char *data){
+static unsigned int read_length(const unsigned char *data){
   return data[0] | (data[1]<<8);
 }
-void write_length(unsigned char *data, unsigned int len){
+static void write_length(unsigned char *data, unsigned int len){
   data[0] = len & 0xff;
   data[1] = (len >> 8) & 0xff;
 }
 
-int detect_forgery(struct libcses_conn *conn){
+static int detect_forgery(struct libcses_conn *conn){
   unsigned char *mac = conn->buffer;
   unsigned char *ciphertext = conn->buffer + MAC_LENGTH;
   int result;
@@ -206,7 +206,7 @@ int detect_forgery(struct libcses_conn *conn){
 }
 
 
-int pipe_ready(struct libcses_conn *conn){
+static int pipe_ready(struct libcses_conn *conn){
   switch( conn->state ){
     case LIBCSES_CONN_SENDING_CLIENT_HANDSHAKE:
     case LIBCSES_CONN_AWAITING_CLIENT_HANDSHAKE:
@@ -224,7 +224,7 @@ int pipe_ready(struct libcses_conn *conn){
   }
 }
 
-void authencrypted_write(
+static void authencrypted_write(
   struct libcses_conn *conn,
   unsigned char *ciphertext,
   const unsigned char *plaintext,

@@ -1,6 +1,11 @@
 /* This file is prepended to the libsodium amalgamation to help it compile */
 #define SODIUM_EXPORT
 
+#ifdef LIBCSES_AMALGAMATION
+#define LIBCSES_PRIVATE static
+#else
+#define LIBCSES_PRIVATE
+#endif
 
 #define crypto_onetimeauth_poly1305_donna crypto_onetimeauth_poly1305
 #define crypto_onetimeauth_poly1305_donna_verify crypto_onetimeauth_poly1305_verify

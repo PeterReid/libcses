@@ -11,7 +11,7 @@
 
 #define AUTHENTICATOR_BYTES crypto_onetimeauth_poly1305_BYTES
 
-void libcses_crypter_init(
+LIBCSES_PRIVATE void libcses_crypter_init(
   struct libcses_crypter *box,
   const unsigned char *key
 ){
@@ -29,7 +29,7 @@ static void libcses_crypter_next_nonce(struct libcses_crypter *box){
   }
 }
 
-void libcses_crypter_encrypt(
+LIBCSES_PRIVATE void libcses_crypter_encrypt(
   struct libcses_crypter *box,
   unsigned char *authenticator,
   unsigned char *text, 
@@ -40,7 +40,7 @@ void libcses_crypter_encrypt(
   libcses_crypter_next_nonce(box);
 }
 
-int libcses_crypter_decrypt(
+LIBCSES_PRIVATE int libcses_crypter_decrypt(
   struct libcses_crypter *box,
   const unsigned char *authenticator,
   unsigned char *text, unsigned int text_len

@@ -1,3 +1,4 @@
+#include "crypto_consts.h"
 
 int cses_crypto_scalarmult_base(unsigned char *q,const unsigned char *n);
 
@@ -32,3 +33,5 @@ int cses_crypto_sign_ed25519_verify_detached_short(const unsigned char *sig,
                                 unsigned int mlen,
                                 const unsigned char *pk);
 
+int cses_crypto_sign_ed25519_seed_keypair(unsigned char *pk, unsigned char *sk,
+                             const unsigned char *seed);
