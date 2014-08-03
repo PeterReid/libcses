@@ -19,6 +19,9 @@ libsodium_amalgamation:
   $(LIBSODIUM)/src/libsodium/crypto_scalarmult/curve25519/donna_c64/base_curve25519_donna_c64.c \
   $(LIBSODIUM)/src/libsodium/include/sodium/crypto_secretbox_xsalsa20poly1305.h \
   $(LIBSODIUM)/src/libsodium/crypto_secretbox/xsalsa20poly1305/ref/api.h \
+  ; echo "#define crypto_secretbox_detached crypto_secretbox_xsalsa20poly1305_detached" \
+  ; echo "#define crypto_secretbox_open_detached crypto_secretbox_xsalsa20poly1305_open_detached" \
+  ; cat \
   $(LIBSODIUM)/src/libsodium/include/sodium/crypto_core_hsalsa20.h \
   $(LIBSODIUM)/src/libsodium/include/sodium/crypto_onetimeauth_poly1305.h \
   $(LIBSODIUM)/src/libsodium/include/sodium/crypto_stream_salsa20.h \

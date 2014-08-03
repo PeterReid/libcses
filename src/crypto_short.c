@@ -3,17 +3,17 @@
 ** take unsigned ints.
 */
 
-int crypto_secretbox_detached_short(
+int crypto_secretbox_xsalsa20poly1305_detached_short(
   unsigned char *c,
   unsigned char *mac,
   const unsigned char *m, unsigned int mlen,
   const unsigned char *n,
   const unsigned char *k
 ){
-  crypto_secretbox_detached(c, mac, m, mlen, n, k);
+  crypto_secretbox_xsalsa20poly1305_detached(c, mac, m, mlen, n, k);
 }
 
-int crypto_secretbox_open_detached_short(
+int crypto_secretbox_xsalsa20poly1305_open_detached_short(
   unsigned char *m,
   const unsigned char *c,
   const unsigned char *mac,
@@ -21,7 +21,7 @@ int crypto_secretbox_open_detached_short(
   const unsigned char *n,
   const unsigned char *k
 ){
-  crypto_secretbox_open_detached(m, c, mac, clen, n, k);
+  crypto_secretbox_xsalsa20poly1305_open_detached(m, c, mac, clen, n, k);
 }
 
 int crypto_stream_salsa20_short(

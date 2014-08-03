@@ -3,13 +3,13 @@
 int cses_crypto_scalarmult_base(unsigned char *q,const unsigned char *n);
 
 int
-cses_crypto_secretbox_detached_short(unsigned char *c, unsigned char *mac,
+cses_crypto_secretbox_xsalsa20poly1305_detached_short(unsigned char *c, unsigned char *mac,
                           const unsigned char *m,
                           unsigned int mlen, const unsigned char *n,
                           const unsigned char *k);
 
 int
-cses_crypto_secretbox_open_detached_short(unsigned char *m, const unsigned char *c,
+cses_crypto_secretbox_xsalsa20poly1305_open_detached_short(unsigned char *m, const unsigned char *c,
                                const unsigned char *mac,
                                unsigned int clen,
                                const unsigned char *n,
