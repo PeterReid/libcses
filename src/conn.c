@@ -31,7 +31,7 @@ int libcses_conn_server_init(
   libcses_memzero(random32, 32);
 
   /* Compute the public key for key exchange */
-  cses_crypto_scalarmult_curve25519_base(public_key, libcses_conn_private(conn));
+  libcses_scalarmult_curve25519_base(public_key, libcses_conn_private(conn));
 
   /* Put together the handshake */
   handshake = libcses_conn_handshake(conn);
@@ -39,7 +39,7 @@ int libcses_conn_server_init(
   memcpy(handshake + SH_IDENTITY_OFFSET, server->public_key, SH_IDENTITY_BYTES);
   memcpy(handshake + SH_EXCHANGE_OFFSET, public_key, SH_EXCHANGE_BYTES);
 
-  cses_crypto_sign_ed25519_detached_short(
+  libcses_sign_ed25519_detached_short(
     handshake + SH_SIGNATURE_OFFSET, 0,
     handshake + SH_EXCHANGE_OFFSET, SH_EXCHANGE_BYTES,
     server->secret_key);
@@ -61,7 +61,7 @@ int libcses_conn_client_init(
   /* Include the protocol-identifying prefix */
   memcpy(handshake + CH_MAGIC_OFFSET, HANDSHAKE_MAGIC, CH_MAGIC_BYTES);
   /* Include the key exchange public key */
-  cses_crypto_scalarmult_curve25519_base(
+  libcses_scalarmult_curve25519_base(
     handshake+CH_EXCHANGE_OFFSET,
     libcses_conn_private(conn));
   libcses_memzero(random32, 32);
@@ -75,17 +75,17 @@ static void libcses_conn_init_crypters(
   unsigned char *private_key,
   int encryptor_first
 ){
-  unsigned char shared[cses_crypto_scalarmult_curve25519_BYTES];
+  unsigned char shared[libcses_scalarmult_curve25519_BYTES];
   unsigned char key_bytes[64];
   unsigned char *encryption_key;
   unsigned char *decryption_key;
-  unsigned char nonce[cses_crypto_stream_salsa20_NONCEBYTES];
+  unsigned char nonce[libcses_stream_salsa20_NONCEBYTES];
 
-  cses_crypto_scalarmult_curve25519(shared, private_key, public_key);
+  libcses_scalarmult_curve25519(shared, private_key, public_key);
 
   memset(nonce, 0, sizeof nonce);
   memset(key_bytes, 0, sizeof key_bytes);
-  cses_crypto_stream_salsa20_short(key_bytes, sizeof key_bytes, nonce, shared);
+  libcses_stream_salsa20_short(key_bytes, sizeof key_bytes, nonce, shared);
   encryption_key = key_bytes + (encryptor_first ? 0 : 32);
   decryption_key = key_bytes + (encryptor_first ? 32 : 0);
 
@@ -279,7 +279,7 @@ int libcses_conn_interact(
           unsigned char *server_public = conn->buffer + SH_EXCHANGE_OFFSET;
           unsigned char *server_identity = conn->buffer + SH_IDENTITY_OFFSET;
           unsigned char *signature = conn->buffer + SH_SIGNATURE_OFFSET;
-          if( cses_crypto_sign_ed25519_verify_detached_short(signature, server_public, SH_EXCHANGE_BYTES, server_identity) ){
+          if( libcses_sign_ed25519_verify_detached_short(signature, server_public, SH_EXCHANGE_BYTES, server_identity) ){
             conn->state = LIBCSES_CONN_CORRUPT;
           }else{
             unsigned char *client_secret = libcses_conn_private(conn);

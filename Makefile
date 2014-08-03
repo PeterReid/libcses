@@ -142,7 +142,7 @@ libsodium_amalgamation:
   ; cat \
     src/crypto_suffix.c \
   ) \
-  | sed 's/crypto_/cses_crypto_/g' | sed '/# *include "/c\' \
+  | sed 's/crypto_/libcses_/g' | sed '/# *include "/c\' \
   | sed 's/^int/LIBCSES_PRIVATE int/g' \
   | sed 's/^size_t/LIBCSES_PRIVATE size_t/g' \
   | sed 's/^void/LIBCSES_PRIVATE void/g' \
@@ -161,7 +161,7 @@ crypto_consts:
 	  $(LIBSODIUM)/src/libsodium/include/sodium/crypto_sign_ed25519.h \
 	  $(LIBSODIUM)/src/libsodium/include/sodium/crypto_stream_salsa20.h \
 	| grep "#define crypto_.* [0-9]" \
-	| sed 's/crypto_/cses_crypto_/g' \
+	| sed 's/crypto_/libcses_/g' \
 	> src/crypto_consts.h
 
 all: test
