@@ -170,6 +170,7 @@ amalgamation: libsodium_amalgamation
 	(echo "#include \"cses.h\"" \
         ; cat \
 	    build/crypto.c \
+	    src/crypto_consts.h \
             src/cses_internal.h \
             src/crypter.h \
 	    src/memzero.h \
