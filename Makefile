@@ -6,8 +6,8 @@ TEST_SOURCES=src/test/all.c src/test/rng.c
 
 LIBSODIUM=../libsodium
 
-LIBSODIUM_FILES=\
-  ( cat \
+libsodium_amalgamation:
+	( cat \
   src/crypto_prelude.h \
   $(LIBSODIUM)/src/libsodium/include/sodium/utils.h \
   $(LIBSODIUM)/src/libsodium/crypto_verify/16/ref/verify_16.c \
@@ -134,13 +134,14 @@ LIBSODIUM_FILES=\
     | sed 's/sigma/xor_salsa20_sigma/g' \
   ; cat \
     src/crypto_short.c \
-  )
+  ) \
+  | sed 's/crypto_/cses_crypto_/g' | sed '/# *include "/c\' > build/crypto.c
+
 
 
 all: test
 
-crypto:
-	$(LIBSODIUM_FILES) | sed 's/crypto_/cses_crypto_/g' | sed '/# *include "/c\' > build/crypto.c
+crypto: libsodium_amalgamation
 	gcc -DHAVE_TI_MODE -c build/crypto.c
 
 test: crypto
