@@ -5,6 +5,7 @@ SOURCES=src/conn.c src/server.c src/crypter.c src/memzero.c
 TEST_SOURCES=src/test/all.c src/test/rng.c
 
 LIBSODIUM=../libsodium
+SIGNPATH=$(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10
 
 libsodium_amalgamation:
 	( cat \
@@ -34,80 +35,80 @@ libsodium_amalgamation:
     | sed 's/SHR/hash_sha512_SHR/g' \
   ; cat \
     $(LIBSODIUM)/src/libsodium/include/sodium/crypto_sign_ed25519.h \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/api.h \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe.h \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge.h \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe_0.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe_1.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe_add.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe_cmov.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe_copy.c \
+    $(SIGNPATH)/api.h \
+    $(SIGNPATH)/fe.h \
+    $(SIGNPATH)/ge.h \
+    $(SIGNPATH)/fe_0.c \
+    $(SIGNPATH)/fe_1.c \
+    $(SIGNPATH)/fe_add.c \
+    $(SIGNPATH)/fe_cmov.c \
+    $(SIGNPATH)/fe_copy.c \
   ; cat \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe_frombytes.c \
+    $(SIGNPATH)/fe_frombytes.c \
     | sed 's/load_3/fe_frombytes_load_3/g' \
     | sed 's/load_4/fe_frombytes_load_4/g' \
-  ; grep -v "}\|return" $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe_invert.c \
-  ; cat $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/pow225521.h \
-  ; echo "}" \
+  ; cat $(SIGNPATH)/fe_invert.c \
+    | awk '/#include "pow225521.h"/{system("cat $(SIGNPATH)/pow225521.h");next}1' \
   ; cat \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe_isnegative.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe_isnonzero.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe_mul.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe_neg.c \
-  ; grep -v "}\|return" $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe_pow22523.c \
-  ; cat $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/pow22523.h \
-  ; echo "}" \
+    $(SIGNPATH)/fe_isnegative.c \
+    $(SIGNPATH)/fe_isnonzero.c \
+    $(SIGNPATH)/fe_mul.c \
+    $(SIGNPATH)/fe_neg.c \
+  ; cat $(SIGNPATH)/fe_pow22523.c \
+    | awk '/#include "pow22523.h"/{system("cat $(SIGNPATH)/pow22523.h");next}1' \
   ; cat \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe_sq.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe_sq2.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe_sub.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/fe_tobytes.c \
-  ; grep -v "}\|return" $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_add.c \
-  ; cat $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_add.h \
-  ; echo "}" \
+    $(SIGNPATH)/fe_sq.c \
+    $(SIGNPATH)/fe_sq2.c \
+    $(SIGNPATH)/fe_sub.c \
+    $(SIGNPATH)/fe_tobytes.c \
+  ; cat $(SIGNPATH)/ge_add.c \
+    | awk '/#include "ge_add.h"/{system("cat $(SIGNPATH)/ge_add.h");next}1' \
+  ; cat $(SIGNPATH)/ge_double_scalarmult.c \
+    | awk '/#include "base2.h"/{system("cat $(SIGNPATH)/base2.h");next}1' \
   ; cat \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_double_scalarmult.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_frombytes.c \
-  ; grep -v "}\|return" $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_madd.c \
-  ; cat $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_madd.h \
-  ; echo "}" \
-  ; grep -v "}\|return" $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_msub.c \
-  ; cat $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_msub.h \
-  ; echo "}" \
+    $(SIGNPATH)/ge_frombytes.c \
+    | awk '/#include "d.h"/{system("cat $(SIGNPATH)/d.h");next}1' \
+    | awk '/#include "sqrtm1.h"/{system("cat $(SIGNPATH)/sqrtm1.h");next}1' \
+  ; cat $(SIGNPATH)/ge_madd.c \
+    | awk '/#include "ge_madd.h"/{system("cat $(SIGNPATH)/ge_madd.h");next}1' \
+  ; cat $(SIGNPATH)/ge_msub.c \
+    | awk '/#include "ge_msub.h"/{system("cat $(SIGNPATH)/ge_msub.h");next}1' \
   ; cat \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_p1p1_to_p2.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_p1p1_to_p3.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_p2_0.c \
-  ; grep -v "}\|return" $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_p2_dbl.c \
-  ; cat $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_p2_dbl.h \
-  ; echo "}" \
+    $(SIGNPATH)/ge_p1p1_to_p2.c \
+    $(SIGNPATH)/ge_p1p1_to_p3.c \
+    $(SIGNPATH)/ge_p2_0.c \
+  ; cat $(SIGNPATH)/ge_p2_dbl.c \
+    | awk '/#include "ge_p2_dbl.h"/{system("cat $(SIGNPATH)/ge_p2_dbl.h");next}1' \
   ; cat \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_p3_dbl.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_p3_0.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_p3_tobytes.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_p3_to_cached.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_p3_to_p2.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_precomp_0.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_scalarmult_base.c \
-  ; grep -v "}\|return" $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_sub.c \
-  ; cat $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_sub.h \
-  ; echo "}" \
+    $(SIGNPATH)/ge_p3_dbl.c \
+    $(SIGNPATH)/ge_p3_0.c \
+    $(SIGNPATH)/ge_p3_tobytes.c \
+  ; cat $(SIGNPATH)/ge_p3_to_cached.c \
+    | awk '/#include "d2.h"/{system("cat $(SIGNPATH)/d2.h");next}1' \
   ; cat \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/ge_tobytes.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/keypair.c \
-    | sed 's/int crypto_sign_keypair/static int unused_keypair/g' \
-    | sed 's/randombytes//g' \
+    $(SIGNPATH)/ge_p3_to_p2.c \
+    $(SIGNPATH)/ge_precomp_0.c \
+  ; cat $(SIGNPATH)/ge_scalarmult_base.c \
+    | awk '/#include "base.h"/{system("cat $(SIGNPATH)/base.h");next}1' \
+  ; cat $(SIGNPATH)/ge_sub.c \
+    | awk '/#include "ge_sub.h"/{system("cat $(SIGNPATH)/ge_sub.h");next}1' \
   ; cat \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/sc_reduce.c \
+    $(SIGNPATH)/ge_tobytes.c \
+  ; cat \
+    $(SIGNPATH)/sc_reduce.c \
     | sed 's/load_3/sc_reduce_load_3/g' \
     | sed 's/load_4/sc_reduce_load_4/g' \
   ; cat \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/sc_muladd.c \
+    $(SIGNPATH)/sc_muladd.c \
     | sed 's/load_3/sc_muladd_load_3/g' \
     | sed 's/load_4/sc_muladd_load_4/g' \
   ; cat \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/sign.c \
-    $(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10/open.c \
+    $(SIGNPATH)/sign.c \
+    $(SIGNPATH)/open.c \
+  ; cat \
+    $(SIGNPATH)/keypair.c \
+    | sed 's/int crypto_sign_keypair/static int unused_keypair/g' \
+    | sed 's/randombytes//g' \
   ; cat \
     $(LIBSODIUM)/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna.h \
     $(LIBSODIUM)/src/libsodium/crypto_onetimeauth/poly1305/donna/poly1305_donna64.h \
@@ -142,7 +143,7 @@ libsodium_amalgamation:
   | sed 's/^int/LIBCSES_PRIVATE int/g' \
   | sed 's/^size_t/LIBCSES_PRIVATE size_t/g' \
   | sed 's/^void/LIBCSES_PRIVATE void/g' \
-  | sed 's/^struct/LIBCSES_PRIVATE struct/g' \
+  | sed 's/^struct/static struct/g' \
   | sed 's/^char \*/LIBCSES_PRIVATE char */g' \
   | sed 's/^unsigned char \*/LIBCSES_PRIVATE unsigned char */g' \
   | sed 's/^const char \*/LIBCSES_PRIVATE const char */g' \

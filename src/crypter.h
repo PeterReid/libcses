@@ -2,6 +2,7 @@
 #include <sodium/crypto_onetimeauth_poly1305.h>
 
 #include "cses.h"
+#include "cses_internal.h"
 
 LIBCSES_PRIVATE void libcses_crypter_init(struct libcses_crypter *, const unsigned char *key);
 

@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "rng.h"
+#include "../cses_internal.h"
 #include "../crypter.h"
 
 void rng_init(rng *r, unsigned int seed){

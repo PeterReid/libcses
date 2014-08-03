@@ -3,6 +3,10 @@
 #include <sodium/crypto_sign_ed25519.h>
 #include <sodium/crypto_stream_xsalsa20.h>
 
+#ifndef LIBCSES_PRIVATE
+#define LIBCSES_PRIVATE
+#endif
+
 /* Legal values of libcses_conn.state */
 #define LIBCSES_CONN_SENDING_CLIENT_HANDSHAKE 1
 #define LIBCSES_CONN_AWAITING_CLIENT_HANDSHAKE 2
