@@ -1,0 +1,10 @@
+/* This file is prepended to the libsodium amalgamation to help it compile */
+#define SODIUM_EXPORT
+
+
+#define crypto_onetimeauth_poly1305_donna crypto_onetimeauth_poly1305
+#define crypto_onetimeauth_poly1305_donna_verify crypto_onetimeauth_poly1305_verify
+#define crypto_onetimeauth_poly1305_donna_init crypto_onetimeauth_poly1305_init
+#define crypto_onetimeauth_poly1305_donna_update crypto_onetimeauth_poly1305_update
+#define crypto_onetimeauth_poly1305_donna_final crypto_onetimeauth_poly1305_final
+
