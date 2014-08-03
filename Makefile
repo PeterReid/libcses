@@ -7,7 +7,13 @@ TEST_SOURCES=src/test/all.c src/test/rng.c
 LIBSODIUM=../libsodium
 SIGNPATH=$(LIBSODIUM)/src/libsodium/crypto_sign/ed25519/ref10
 
-libsodium_amalgamation:
+bindir:
+	mkdir -p bin
+
+builddir:
+	mkdir -p build
+
+libsodium_amalgamation: builddir
 	( cat \
   src/crypto_prelude.h \
   $(LIBSODIUM)/src/libsodium/include/sodium/utils.h \
@@ -166,10 +172,10 @@ crypto_consts:
 
 all: test
 
-crypto: libsodium_amalgamation
-	gcc -DHAVE_TI_MODE -c build/crypto.c
+crypto.o: libsodium_amalgamation
+	gcc -DHAVE_TI_MODE -c build/crypto.c -o build/crypto.o
 
-amalgamation: libsodium_amalgamation
+amalgamation: libsodium_amalgamation crypto_consts
 	(echo "#include \"cses.h\"" \
         ; cat \
 	    build/crypto.c \
@@ -182,17 +188,26 @@ amalgamation: libsodium_amalgamation
         ) \
 	> build/cses.c
 
-cses.o: amalgamation crypto_consts
-	gcc -DHAVE_TI_MODE -c -DLIBCSES_AMALGAMATION -o build/cses.o build/cses.c
+AMALGAMATION_FLAGS=-DHAVE_TI_MODE -DLIBCSES_AMALGAMATION -I src/include
 
-lib: cses.o
-	ar -rcs cses.a build/cses.o
+cses.o: amalgamation
+	gcc -O2 -c $(AMALGAMATION_FLAGS) -o build/cses.o build/cses.c
 
-test: crypto crypto_consts
-	gcc $(CFLAGS) -g -o tester -I src/include -I build $(SOURCES) $(TEST_SOURCES) crypto.o -lsodium
+
+lib: cses.o bindir
+	ar -rcs bin/libcses.a build/cses.o
+
+so: amalgamation bindir
+	gcc -O2 -shared -o bin/libcses.so -fPIC $(AMALGAMATION_FLAGS) build/cses.c
+
+test: crypto.o crypto_consts
+	gcc $(CFLAGS) -g -o tester -I src/include -I build $(SOURCES) $(TEST_SOURCES) build/crypto.o -lsodium
 
 
 
 valgrind: test
 	valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./tester
 
+clean:
+	rm -r bin
+	rm -r build
