@@ -36,7 +36,7 @@ void libcses_crypter_encrypt(
   unsigned int text_len
 ){
   /* libsodium does not provide a declaration for the specifically xsalsa20poly1305 version of this */
-  amal_crypto_secretbox_detached_short(text, authenticator, text, text_len, box->nonce, box->key);
+  cses_crypto_secretbox_detached_short(text, authenticator, text, text_len, box->nonce, box->key);
   libcses_crypter_next_nonce(box);
 }
 
@@ -46,7 +46,7 @@ int libcses_crypter_decrypt(
   unsigned char *text, unsigned int text_len
 ){
   /* libsodium does not provide a declaration for the specifically chacha20poly1305 version of this */
-  int res = amal_crypto_secretbox_open_detached_short(text, text, authenticator, text_len, box->nonce, box->key);
+  int res = cses_crypto_secretbox_open_detached_short(text, text, authenticator, text_len, box->nonce, box->key);
   libcses_crypter_next_nonce(box);
   return res;
 }

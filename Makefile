@@ -140,7 +140,7 @@ LIBSODIUM_FILES=\
 all: test
 
 crypto:
-	$(LIBSODIUM_FILES) | sed 's/crypto_/amal_crypto_/g' | sed '/# *include "/c\' > build/crypto.c
+	$(LIBSODIUM_FILES) | sed 's/crypto_/cses_crypto_/g' | sed '/# *include "/c\' > build/crypto.c
 	gcc -DHAVE_TI_MODE -c build/crypto.c
 
 test: crypto

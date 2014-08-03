@@ -1,14 +1,14 @@
 
-int amal_crypto_scalarmult_base(unsigned char *q,const unsigned char *n);
+int cses_crypto_scalarmult_base(unsigned char *q,const unsigned char *n);
 
 int
-amal_crypto_secretbox_detached_short(unsigned char *c, unsigned char *mac,
+cses_crypto_secretbox_detached_short(unsigned char *c, unsigned char *mac,
                           const unsigned char *m,
                           unsigned int mlen, const unsigned char *n,
                           const unsigned char *k);
 
 int
-amal_crypto_secretbox_open_detached_short(unsigned char *m, const unsigned char *c,
+cses_crypto_secretbox_open_detached_short(unsigned char *m, const unsigned char *c,
                                const unsigned char *mac,
                                unsigned int clen,
                                const unsigned char *n,
@@ -16,18 +16,18 @@ amal_crypto_secretbox_open_detached_short(unsigned char *m, const unsigned char 
 
 
 int
-amal_crypto_scalarmult_curve25519(unsigned char *mypublic, const unsigned char *secret, const unsigned char *basepoint);
+cses_crypto_scalarmult_curve25519(unsigned char *mypublic, const unsigned char *secret, const unsigned char *basepoint);
 
-int amal_crypto_scalarmult_curve25519_base(unsigned char *q,const unsigned char *n);
+int cses_crypto_scalarmult_curve25519_base(unsigned char *q,const unsigned char *n);
 
-int amal_crypto_stream_salsa20_short(unsigned char *c, unsigned int clen,
+int cses_crypto_stream_salsa20_short(unsigned char *c, unsigned int clen,
                           const unsigned char *n, const unsigned char *k);
 
-int amal_crypto_sign_ed25519_detached_short(unsigned char *sig, unsigned int *siglen,
+int cses_crypto_sign_ed25519_detached_short(unsigned char *sig, unsigned int *siglen,
                          const unsigned char *m, unsigned int mlen,
                          const unsigned char *sk);
 
-int amal_crypto_sign_ed25519_verify_detached_short(const unsigned char *sig,
+int cses_crypto_sign_ed25519_verify_detached_short(const unsigned char *sig,
                                 const unsigned char *m,
                                 unsigned int mlen,
                                 const unsigned char *pk);
