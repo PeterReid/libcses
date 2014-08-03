@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-Wall -Wextra -pedantic
 
-SOURCES=src/conn.c src/server.c src/crypter.c src/memzero.c
+SOURCES=src/conn.c src/server.c src/crypter.c
 TEST_SOURCES=src/test/all.c src/test/rng.c
 
 LIBSODIUM=../libsodium
@@ -140,7 +140,7 @@ libsodium_amalgamation:
     $(LIBSODIUM)/src/libsodium/crypto_stream/salsa20/stream_salsa20_api.c \
     | sed 's/sigma/xor_salsa20_sigma/g' \
   ; cat \
-    src/crypto_short.c \
+    src/crypto_suffix.c \
   ) \
   | sed 's/crypto_/cses_crypto_/g' | sed '/# *include "/c\' \
   | sed 's/^int/LIBCSES_PRIVATE int/g' \
@@ -175,10 +175,8 @@ amalgamation: libsodium_amalgamation
 	    build/crypto.c \
 	    src/crypto_consts.h \
             src/cses_internal.h \
-	    src/memzero.h \
 	    src/conn.c \
 	    src/crypter.c \
-	    src/memzero.c \
 	    src/server.c \
           | sed '/# *include "/c\' \
         ) \

@@ -52,3 +52,10 @@ int crypto_sign_ed25519_verify_detached_short(
   crypto_sign_ed25519_verify_detached(sig, m, mlen, pk);
 }
 
+/* The "exported" comment here suppresses the sed pass in the makefile that would
+** otherwise make this not exported from the library; it checks for certain
+** line beginnings. */
+/*exported*/ void libcses_memzero(void * const pnt, const size_t len){
+  sodium_memzero(pnt, len);
+}
+

@@ -35,3 +35,5 @@ int cses_crypto_sign_ed25519_verify_detached_short(const unsigned char *sig,
 
 int cses_crypto_sign_ed25519_seed_keypair(unsigned char *pk, unsigned char *sk,
                              const unsigned char *seed);
+
+void libcses_memzero(void * const pnt, const size_t len);
