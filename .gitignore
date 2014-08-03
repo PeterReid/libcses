@@ -1,3 +1,9 @@
 *.swp
+*.swo
+*.a
+*.la
+*.so*
+*.o
+build
 tester
 
