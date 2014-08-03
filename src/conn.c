@@ -1,8 +1,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "cses.h"
-#include "crypter.h"
 #include "memzero.h"
 #include "cses_internal.h"
 #include "crypto.h"

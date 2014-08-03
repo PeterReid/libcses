@@ -172,7 +172,6 @@ amalgamation: libsodium_amalgamation
 	    build/crypto.c \
 	    src/crypto_consts.h \
             src/cses_internal.h \
-            src/crypter.h \
 	    src/memzero.h \
 	    src/conn.c \
 	    src/crypter.c \

@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "cses_internal.h"
-#include "crypter.h"
 #include "crypto.h"
 
 #define AUTHENTICATOR_BYTES cses_crypto_onetimeauth_poly1305_BYTES

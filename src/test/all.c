@@ -2,9 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "cses.h"
-
-#include "../crypter.h"
 #include "../cses_internal.h"
 #include "rng.h"
 

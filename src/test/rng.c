@@ -2,7 +2,6 @@
 
 #include "rng.h"
 #include "../cses_internal.h"
-#include "../crypter.h"
 
 void rng_init(rng *r, unsigned int seed){
   unsigned char key[LIBCSES_SECRET_BOX_KEY_BYTES];
