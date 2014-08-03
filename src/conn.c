@@ -44,7 +44,7 @@ int libcses_conn_server_init(
   memcpy(handshake + SH_IDENTITY_OFFSET, server->public_key, SH_IDENTITY_BYTES);
   memcpy(handshake + SH_EXCHANGE_OFFSET, public_key, SH_EXCHANGE_BYTES);
 
-  amal_crypto_sign_ed25519_detached(
+  amal_crypto_sign_ed25519_detached_short(
     handshake + SH_SIGNATURE_OFFSET, 0,
     handshake + SH_EXCHANGE_OFFSET, SH_EXCHANGE_BYTES,
     server->secret_key);
@@ -90,7 +90,7 @@ static void libcses_conn_init_crypters(
 
   memset(nonce, 0, sizeof nonce);
   memset(key_bytes, 0, sizeof key_bytes);
-  amal_crypto_stream_salsa20(key_bytes, sizeof key_bytes, nonce, shared);
+  amal_crypto_stream_salsa20_short(key_bytes, sizeof key_bytes, nonce, shared);
   encryption_key = key_bytes + (encryptor_first ? 0 : 32);
   decryption_key = key_bytes + (encryptor_first ? 32 : 0);
 
@@ -284,7 +284,7 @@ int libcses_conn_interact(
           unsigned char *server_public = conn->buffer + SH_EXCHANGE_OFFSET;
           unsigned char *server_identity = conn->buffer + SH_IDENTITY_OFFSET;
           unsigned char *signature = conn->buffer + SH_SIGNATURE_OFFSET;
-          if( amal_crypto_sign_ed25519_verify_detached(signature, server_public, SH_EXCHANGE_BYTES, server_identity) ){
+          if( amal_crypto_sign_ed25519_verify_detached_short(signature, server_public, SH_EXCHANGE_BYTES, server_identity) ){
             conn->state = LIBCSES_CONN_CORRUPT;
           }else{
             unsigned char *client_secret = libcses_conn_private(conn);

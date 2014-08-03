@@ -132,6 +132,8 @@ LIBSODIUM_FILES=\
     $(LIBSODIUM)/src/libsodium/crypto_stream/salsa20/ref/xor_salsa20_ref.c \
     $(LIBSODIUM)/src/libsodium/crypto_stream/salsa20/stream_salsa20_api.c \
     | sed 's/sigma/xor_salsa20_sigma/g' \
+  ; cat \
+    src/crypto_short.c \
   )
 
 
