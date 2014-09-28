@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <string.h>
+#include <assert.h>
 
 #include "cses_internal.h"
 #include "crypto.h"
@@ -231,6 +232,21 @@ static void authencrypted_write(
   libcses_crypter_encrypt(&conn->encryptor, mac, body, plaintext_len);
 }
 
+void flush_output_buffer(
+  struct libcses_conn *conn,
+  unsigned char *ciphertext_out,
+  int ciphertext_out_capacity,
+  int *ciphertext_out_written
+){
+  int will_write = min(conn->output_buffer_count, ciphertext_out_capacity);
+  if( will_write==0 ) return;
+
+  memcpy(ciphertext_out + *ciphertext_out_written, conn->output_buffer, will_write);
+  memmove(conn->output_buffer, conn->output_buffer+will_write, conn->output_buffer_count - will_write);
+  conn->output_buffer_count -= will_write;
+  *ciphertext_out_written += will_write;
+}
+
 int libcses_conn_interact(
   struct libcses_conn *conn,
   const unsigned char *plaintext_in, int plaintext_in_len, int *plaintext_in_read,
@@ -338,15 +354,34 @@ int libcses_conn_interact(
     }
   }
 
-  if( pipe_ready(conn) && ciphertext_out_capacity>0 && plaintext_in_len>0 ){
+  if( pipe_ready(conn) && ciphertext_out_capacity>0 ){
+    flush_output_buffer(conn, ciphertext_out, ciphertext_out_capacity, ciphertext_out_written);
+
     while( 1 ){
       int ciphertext_out_available = ciphertext_out_capacity - *ciphertext_out_written;
       int plaintext_in_available = plaintext_in_len - *plaintext_in_read;
-      int ciphertext_out_available_body = ciphertext_out_available - SEGMENT_OVERHEAD;
-      int will_send = min(
+      int is_degenerate_write = ciphertext_out_available>0
+                             && ciphertext_out_available<=SEGMENT_OVERHEAD
+                             && plaintext_in_available>0;
+      int ciphertext_out_available_body;
+      int will_send;
+      unsigned char *write_to;
+      int *written;
+      unsigned char length_buf[2];
+
+      if( is_degenerate_write ){
+        write_to = conn->output_buffer;
+        written = &conn->output_buffer_count;
+        assert( *written==0 );
+        ciphertext_out_available = OUTPUT_BUFFER_CAPACITY;
+      }else{
+        write_to = ciphertext_out;
+        written = ciphertext_out_written;
+      }
+      ciphertext_out_available_body = ciphertext_out_available - SEGMENT_OVERHEAD;
+      will_send = min(
         MAX_SEGMENT_LENGTH,
         min(plaintext_in_available, ciphertext_out_available_body));
-      unsigned char length_buf[2];
       if( will_send<=0 ){
         break;
       }
@@ -355,17 +390,21 @@ int libcses_conn_interact(
 
       authencrypted_write(
         conn, 
-        ciphertext_out + *ciphertext_out_written,
+        write_to + *written,
         length_buf,
         2);
-      *ciphertext_out_written += 2 + MAC_LENGTH;
+      *written += 2 + MAC_LENGTH;
       authencrypted_write(
         conn,
-        ciphertext_out + *ciphertext_out_written,
+        write_to + *written,
         plaintext_in + *plaintext_in_read,
         will_send);
-      *ciphertext_out_written += will_send + MAC_LENGTH;
+      *written += will_send + MAC_LENGTH;
       *plaintext_in_read += will_send;
+
+      if( is_degenerate_write ){
+        flush_output_buffer(conn, ciphertext_out, ciphertext_out_capacity, ciphertext_out_written);
+      }
     }
   }
 

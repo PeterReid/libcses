@@ -185,7 +185,17 @@ void random_increase(rng *r, int *val, int limit){
   if( *val>limit ) *val = limit;
 }
 
-void generic_stream_test(int seed, int verbose){
+#define ONE_BYTE_BUFFERS 1
+#define SHORT_TRANSMISSION 2
+void apply_bufferlength_flags(int *limit, int current, int flags){
+  if( flags&ONE_BYTE_BUFFERS ){
+    if( *limit > current+1 ){
+      *limit = current+1;
+    }
+  }
+}
+
+void generic_stream_test(int seed, int verbose, int flags){
   rng r;
   int for_server_length, for_client_length;
   unsigned char *for_server, *for_client, *from_server, *from_client; /* plaintexts */
@@ -229,6 +239,12 @@ void generic_stream_test(int seed, int verbose){
   c_to_s_length = for_server_length*10;
   s_to_c_length = for_client_length*10;
 
+  if( flags&SHORT_TRANSMISSION ){
+    for_server_length %= 200;
+    for_client_length %= 200;
+    c_to_s_length = s_to_c_length = 100000; /* In case of lots of degenerate writes */
+  }
+
   for_server = (unsigned char *)malloc(for_server_length);
   for_client = (unsigned char *)malloc(for_client_length);
   from_server = (unsigned char *)malloc(for_client_length);
@@ -244,34 +260,42 @@ void generic_stream_test(int seed, int verbose){
     switch( action ){
     case 0:
       random_increase(&r, &s_ciphertext_write_limit, s_to_c_length);
+      apply_bufferlength_flags(&s_ciphertext_write_limit, s_ciphertext_write, flags);
       if( verbose ) printf("s_ciphertext_write_limit = %d\n", s_ciphertext_write_limit);
       break;
     case 1:
       random_increase(&r, &c_ciphertext_write_limit, c_to_s_length);
+      apply_bufferlength_flags(&c_ciphertext_write_limit, c_ciphertext_write, flags);
       if( verbose ) printf("c_ciphertext_write_limit = %d\n", s_ciphertext_write_limit);
       break;
     case 2:
       random_increase(&r, &s_ciphertext_read_limit, c_ciphertext_write);
+      apply_bufferlength_flags(&s_ciphertext_read_limit, s_ciphertext_read, flags);
       if( verbose ) printf("s_ciphertext_read_limit = %d\n", s_ciphertext_read_limit);
       break;
     case 3:
       random_increase(&r, &c_ciphertext_read_limit, s_ciphertext_write);
+      apply_bufferlength_flags(&c_ciphertext_read_limit, c_ciphertext_read, flags);
       if( verbose ) printf("c_ciphertext_read_limit = %d\n", c_ciphertext_read_limit);
       break;
     case 4:
       random_increase(&r, &s_plaintext_write_limit, for_server_length);
+      apply_bufferlength_flags(&s_plaintext_write_limit, s_plaintext_write, flags);
       if( verbose ) printf("s_plaintext_write_limit = %d\n", s_plaintext_write_limit);
       break;
     case 5:
       random_increase(&r, &c_plaintext_write_limit, for_client_length);
+      apply_bufferlength_flags(&c_plaintext_write_limit, c_plaintext_write, flags);
       if( verbose ) printf("c_plaintext_write_limit = %d\n", s_plaintext_write_limit);
       break;
     case 6:
       random_increase(&r, &s_plaintext_read_limit, for_client_length);
+      apply_bufferlength_flags(&s_plaintext_read_limit, s_plaintext_read, flags);
       if( verbose ) printf("s_plaintext_read_limit = %d\n", s_plaintext_read_limit);
       break;
     case 7:
       random_increase(&r, &c_plaintext_read_limit, for_server_length);
+      apply_bufferlength_flags(&c_plaintext_read_limit, c_plaintext_read, flags);
       if( verbose ) printf("c_plaintext_read_limit = %d\n", c_plaintext_read_limit);
       break;
     case 8:
@@ -285,7 +309,7 @@ void generic_stream_test(int seed, int verbose){
         printf("Client interacted (%d)\n", res);
         printf("  Plaintext read: %d of %d\n", c_plaintext_read, c_plaintext_read_limit);
         printf("  Ciphertext read: %d of %d\n", c_ciphertext_read, c_ciphertext_read_limit);
-        printf("  Plaintext written: %d of %d\n", c_plaintext_write, c_ciphertext_write_limit);
+        printf("  Plaintext written: %d of %d\n", c_plaintext_write, c_plaintext_write_limit);
         printf("  Ciphertext written: %d of %d\n", c_ciphertext_write, c_ciphertext_write_limit);
       }
       if( res==LIBCSES_HAS_IDENTITY ){
@@ -333,14 +357,19 @@ void generic_stream_test(int seed, int verbose){
 void stream_tests(){
   int seed;
   for( seed=0; seed<100; seed++ ){
-    generic_stream_test(seed, 0);
+    generic_stream_test(seed, 0, 0);
   }
+}
+
+void tinybuffer_test(){
+  generic_stream_test(10000, 0, ONE_BYTE_BUFFERS|SHORT_TRANSMISSION);
 }
 
 int main(){
   crypter_nonce_incrementing();
   simple_exchange();
   stream_tests();
+  tinybuffer_test();
   printf("Complete\n");
   return 0;
 }

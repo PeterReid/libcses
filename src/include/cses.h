@@ -47,6 +47,8 @@ struct libcses_crypter{
 #define MAC_LENGTH LIBCSES_SECRET_BOX_AUTHENTICATOR_BYTES
 #define SEGMENT_OVERHEAD (2 + MAC_LENGTH + MAC_LENGTH)
 #define BUFFER_CAPACITY (MAX_SEGMENT_LENGTH + MAC_LENGTH)
+#define DEGENERATE_ENCRYPTION_LENGTH SEGMENT_OVERHEAD
+#define OUTPUT_BUFFER_CAPACITY (SEGMENT_OVERHEAD + DEGENERATE_ENCRYPTION_LENGTH)
 
 struct libcses_conn{
   int state;
@@ -55,6 +57,8 @@ struct libcses_conn{
   unsigned char buffer[BUFFER_CAPACITY];
   int buffered_count;
   int expected_count;
+  unsigned char output_buffer[OUTPUT_BUFFER_CAPACITY];
+  int output_buffer_count;
 };
 /* Get the size, in bytes, that a conn occupies.
 ** A memory block of this size should be passed to libcses_conn_init().
